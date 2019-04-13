@@ -13,17 +13,22 @@ public class CodeGen {
         Col[] cols= new Col[n];
         setInfo(cols);
 
-        for(int i=1; i<n;i*=2) {
-            int k =(int)Math.pow(2,i);
-            for(int j=0; j<n/k; j+=k) {
-                runOperation(cols[j+k-1],cols[j+k/2-1]);
+        for(int i=1; Math.pow(2,i)<=n;i++) {
+            int k =(int)Math.pow(2,i-1);
+            for(int j=k-1; j<n; j+=2*k) {
+                if(j+k<n){
+                    runOperation(cols[j],cols[j+k]);
+                }
             }
         }
 
-        for(int i=1; i<n;i*=2) {
-            int k =(int)Math.pow(2,i);
-            for(int j=0; 3*n/(2*k)+j-1<n; j+=n/k) {
-                runOperation(cols[3*n/(2*k)+j-1],cols[j+n/k-1]);
+        for(int i=2; i<n;i*=2) {
+            int k =n/i;
+            int l=k/2;
+            for(int j=k-1; j<n; j+=k) {
+                if(j+l<n){
+                    runOperation(cols[j],cols[j+l]);
+                }
             }
         }
 
@@ -42,7 +47,7 @@ public class CodeGen {
         System.out.println("wire ["+(n-1)+":0] p;");
         System.out.println("wire ["+(n-1)+":0] g; \n");
         System.out.println("assign p=a^b;");
-        System.out.println("assign g=a^b; \n\n");
+        System.out.println("assign g=a&b; \n\n");
     }
 
     private static void setInfo(Col[] cols){
@@ -55,7 +60,7 @@ public class CodeGen {
         }
     }
 
-    private static int opNo=0;
+    private static int operationNo=0;
 
     private static void runOperation(Col col1,Col col2) {
         String oldWire1, oldWire2,oldWire3, oldWire4;
@@ -64,14 +69,14 @@ public class CodeGen {
         oldWire3="cp_"+col2.levelCounter+"_"+col2.colNo;
         oldWire4="cg_"+col2.levelCounter+"_"+col2.colNo;
 
-        col1.levelCounter++;
+        col2.levelCounter++;
         String newWire1, newWire2;
-        newWire1="cp_"+col1.levelCounter+"_"+col1.colNo;
-        newWire2="cg_"+col1.levelCounter+"_"+col1.colNo;
+        newWire1="cp_"+col2.levelCounter+"_"+col2.colNo;
+        newWire2="cg_"+col2.levelCounter+"_"+col2.colNo;
         System.out.println("wire "+newWire1+";");
         System.out.println("wire "+newWire2+";");
-        System.out.println("GenNew"+" genNew_"+opNo+"("+oldWire1+","+oldWire2+","+oldWire3+","+oldWire4+","+newWire1+","+newWire2+"); \n");
-        opNo++;
+        System.out.println("GenNew"+" genNew_"+operationNo+"("+oldWire1+","+oldWire2+","+oldWire3+","+oldWire4+","+newWire1+","+newWire2+"); \n");
+        operationNo++;
     }
 
     private static void assignSum(Col []cols) {
@@ -79,7 +84,7 @@ public class CodeGen {
         for(int i=1; i<cols.length;i++) {
             System.out.println("assign sum["+cols[i].colNo+"]=p["+cols[i].colNo+"]^cg_"+cols[i-1].levelCounter+"_"+cols[i-1].colNo+";");
         }
-        System.out.println("assign sum["+cols.length+"]=cp_"+cols[cols.length-1].levelCounter+"_"+cols[cols.length-1].colNo+";");
+        System.out.println("assign sum["+cols.length+"]=cg_"+cols[cols.length-1].levelCounter+"_"+cols[cols.length-1].colNo+";");
     }
 
 }
